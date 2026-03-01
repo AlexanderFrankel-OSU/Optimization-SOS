@@ -1,6 +1,5 @@
 function [X] = adbash(X)
-load("Sandra_Vars.mat","sig","b","r","dt", "Pos")
-MatWidth = size(X,2);
+load("Sandra_Vars.mat","sig","b","r","dt")
 
 
     for i = 2
