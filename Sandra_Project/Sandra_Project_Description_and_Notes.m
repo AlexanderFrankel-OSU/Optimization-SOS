@@ -25,10 +25,24 @@ two of the variables to enter into the data assimilation scheme, you can
 not be data assimilating with. I.e., if Sandra lost her y and z data, uy 
 and uz should be set to zero. 
 
-For this to work, you then have to save
+For this to work you can save
 those variables to the Sandra_Vars.mat file. Then, you can run adbash on
 Pos, and then run DAadbash on daPos with Pos as the second argument, to
 achieve this. I'm sure there's a better way, but for the moment, this is
-what I have.
+what I have. This can be done for each variable, and we will see that if
+there is only x data or y data, Sandra does not need to redo her experiment
+because  the data assimilation from one variable synchronizes the others to
+the right path. However, if only z data is left, this will not work.
+
+Some notes on doing that: I found that I had to make the value of ux
+sufficiently small (while uy and uz were zero) to get the scheme to
+converge in a nice way. 10 was too chunky, 100 was worse, so I settled on
+ux=1.
+
+Unfortunately, I could not get the data to be reproduced by data
+assimilation with only one column of position data! This is something I
+hope to discuss in the next meeting.
+
+-Xander
 
 %}
