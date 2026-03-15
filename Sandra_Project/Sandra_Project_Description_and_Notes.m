@@ -5,7 +5,7 @@ data (which was generated via the Adams-Bashforth method). The files have
 been vastly simplified and cleaned up.
 
 The main functions I used were the initmatrix, DAadbash, and adbash (which
-is now mostly obsolete because of DAadbash). One change I made to the
+is now obsolete because of DAadbash). One change I made to the
 DAadbash function was to make it detect which version it should run---regular 
 Adams-Bashforth, or with data assimilation. If it detects less than two variables, 
 it tries to run regular adbash. If there's two or more, it tries to run data-assimilated
