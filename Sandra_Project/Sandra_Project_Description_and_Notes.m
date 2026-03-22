@@ -1,4 +1,9 @@
 %{
+To just run the project's objective, type EvoScript(_,_,_), where the
+inputs are the values for the three data-assimilation variables, ux, uy,
+uz, in that order. The function takes in those values and assigns them to
+the variables used by the other functions in this project.
+
 For the Sandra Project, I investigated some exciting properties of the
 Lorenz '63 system, including using data assimilation based off of initial
 data (which was generated via the Adams-Bashforth method). The files have
@@ -40,6 +45,40 @@ change them and save the Sandra_Variables.m and then run EvoScript. This is
 not ideal, but it does work. Machine precision in MATLAB corresponds to
 about 53 bits, which means about 15 digits in base 10. Hopefully, the
 difference would converge to machine zero. Currently, they've been
-converging to around 10^-12 to 10^-14.
+converging to around 10^-12 to 10^-14. This is promising, but I can not be
+sure that this is not some fundamental difference that does not shrink
+further. The only option for this would be to increase the size of the daPos
+and Pos matrices. A length 800000 matrix is already quite large in my opinion,
+though.
+
+I've played around with values for the mu constants and have found that for
+some values of the nudging constants, the data-assimilation does not appear
+to converge as expected. For example, the values (20,0,0) produced a
+slow-converging scheme. However, something like (20,20,100) converged
+extremely fast, and visibly hit machine zero within 20000 steps.
+
+For both the ux and uy, if one is 200 while the others are 0, then the
+system converges to machine zero quickly. However, if we let only uz be
+200, the system does not converge as quickly in the 800000 steps. Keep in 
+mind this is all with the same Reyleigh number, 0.5.
+
+It seems that even with small values we can recover all possible
+information about later states, as the data-assimilation has time to catch
+up and correct error.
+
+
+Based on trial and error, the minimum values for when the two other data 
+sets are lost are:
+For ux only, it converges to machine epsilon after ux = 12.
+For uy only, it converges to machine epsilon after uy = 4.
+For uz only, it converges to machine epsilon after uz = 7.
+
+This brings up a lot of questions for me:
+
+1. How fast CAN we get the data-assimilation scheme to converge?
+2. How can we find the best mu values for this? Is this useful?
+3. Just an observation: This data assimilation scheme has a start that differs significantly
+from the true system. The scheme only gets better as time goes on.
+4. Are the minimum mu values and fastest-converging mu values related?
 
 %}
