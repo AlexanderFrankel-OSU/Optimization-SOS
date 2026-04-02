@@ -7,10 +7,9 @@ x = sdpvar(3,1);
 % Create sdpvars that can represent the terms and coeffcients of the
 % polynomial
 
-Terms = monolist([x(1),x(2),x(3)],2);
+Terms = monolist([x(1),x(2),x(3)],2,2);
 Coeffs = sdpvar(length(Terms),1);
-% Define the optvar that MOSEK will be tuning (it shouldn't be tuning the
-% terms, Xander)
+% Define the optvar that MOSEK will be tuning
 optvar = Coeffs;
 
 % Define V by the sum of the product of the terms and coefficients
@@ -62,8 +61,5 @@ disp('Derivative of Lyapunov function')
 sdisplay(.5*(jacobian(plnm,x(1))*dxdt+jacobian(plnm,x(2))*dydt+jacobian(plnm,x(3))*dzdt))
 disp('These are the terms and their corresponding coefficients')
 sdisplay([value(Coeffs),Terms])
-disp('These do not appear to be the Lyapunov function found in Strogatz')
-disp('The function found is clearly a sum-of-squares, but I am not sure about the derivative.')
-disp('Is the best way to test the derivative to use the replace function on a large test region?')
-disp('I could also try completing the square for it.')
-disp('But, according to Desmos 3D, the derivitive is negative definite except for at the origin.')
+
+disp('According to Desmos 3D, the derivitive is negative definite except for at the origin.')
