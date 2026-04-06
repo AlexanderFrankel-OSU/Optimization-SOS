@@ -37,7 +37,7 @@ negdVdt_sos = -dVdt-eps*(x(1)^2+x(2)^2+x(3)^2);
 
 F_cnstr = [sos(Vsos),  sos(negdVdt_sos)];
 
-% Here we set the options for YALMIP to use MOSEK, and what valiables
+% Here we set the options for YALMIP to use MOSEK, and what variables
 % should receive the outputs
 options = sdpsettings('solver', 'mosek');
 [sol,v,Q,res] = solvesos(F_cnstr, [], options, optvar);
