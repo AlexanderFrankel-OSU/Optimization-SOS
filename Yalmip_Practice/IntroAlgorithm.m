@@ -36,7 +36,7 @@ objfunc = mu(1)+mu(2);
 % constr = [negQconstr >= 0, mupos(1)>=0,mupos(2)>=0];
 % optimize(constr,objfunc,options,optvar)
 
-% Define the constraints on the optimization. The mus need to be strictly
+% Define the constraints on the optimization. The mu_s need to be strictly
 % positive, and Q should be negative semi-definite (which is equivalent to
 % the expression for dUdt being negative semi-definite, which MOSEK can
 % handle).
@@ -47,7 +47,6 @@ options = sdpsettings('solver', 'mosek');
 [sol,v,M,res] = solvesos(constr,objfunc,options,optvar);
 
 sdisplay(value(mu))
-check(constr)
 
 
 
