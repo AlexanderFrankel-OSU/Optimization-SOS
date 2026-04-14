@@ -1,7 +1,7 @@
 function [M] = timevo(Oper,data,x0,MU,steps)
 
 
-dt = 0.0001;
+dt = 1e-6;
 Alen = size(Oper,1);
 
 

@@ -19,10 +19,10 @@ objfunc = mu(1)+mu(2);
 % Here are all the derivatives so we can define the semi-definite
 % constraints of the energy and its time derivative.
 
-syst = [-(1+mu(1)) 1.5 0.5 0.2;
-    1 -(2+mu(2)) 1 1; 
-    0.5 0.5 -3 -1; 
-    0.5 0.5 1 -4];
+syst = [-(1+mu(1)) 1.25 0.5 0.35; 
+    1.25 -(2+mu(2)) 0.75 0.75;
+    0.5 0.75 -3 0;
+    0.35 0.75 0 -4];
 partials = syst*x;
 
 %dP1dt = -(1+mu(1))*x(1)+1.5*x(2)+0.5*x(3)+0.2*x(4);
@@ -56,7 +56,7 @@ negdUdtsos = -dUdt-eps*(x'*x);
 
 cnstr = [sos(Usos), sos(negdUdtsos), mupos(1) >= 0, mupos(2) >= 0]
 
-options = sdpsettings('solver', 'mosek')%, 'sos.congruence', 1, 'sos.reuse', 1,'sos.newton', 1,'sos.numblkdg',1e-4);
+options = sdpsettings('solver', 'mosek');%, 'sos.congruence', 1, 'sos.reuse', 1,'sos.newton', 1,'sos.numblkdg',1e-4);
 
 %[sol,v,M,res] = 
 solvesos(cnstr,objfunc,options,optvar);
