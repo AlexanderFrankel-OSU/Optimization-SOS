@@ -29,4 +29,4 @@ end
 
 
 
-semilogy(1:1e+6,AbsDiff);
+semilogy(1:(size(AbsDiff,1)),AbsDiff);
