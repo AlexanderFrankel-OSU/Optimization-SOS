@@ -19,7 +19,7 @@ x0m = [.2,.2,-.2,.1];
 % minimum:
 mu = [.36 0 0 0];
 
-systda = syst-diag(mu);
+systda = syst;%-diag(mu)
 
 % Note that the data assimilation system below was what I was using before; 
 % I just decided to switch to the diagonal because it was cleaner, and can 
@@ -38,12 +38,12 @@ systda = syst-diag(mu);
 % The operator matrix goes in the first entry, initial values in the third,
 % and number of abash itterations in the last.
 
-Mt = timevo(syst,[],x0t,[],1e+6); 
+Mt = timevo(syst,[],x0t,[],1e+7); 
 % I'll add shorter comments in the timevo and abash scripts.
 
 % Once the "data" is generated from the above line, the model takes in the
 % data "Mt" and uses the mu values, starting at different initial values.
-Mm = timevo(systda,Mt,x0m,mu,1e+6);
+Mm = timevo(systda,Mt,x0m,mu,1e+7);
 
 % After that, we take the difference between data and model and calculate 
 % the absolute difference in quadrature, and plot it using semilogy.

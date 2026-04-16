@@ -3,7 +3,8 @@ function [M] = timevo(Oper,Data,x0,MU,steps)
 
 % This time step is arbitrary, and can be made smaller; I can also change
 % the scripts to allow it as an optional last parameter.
-dt = 1e-6;
+dt = 1e-5; 
+% Decreasing to 1e-4 makes it converge faster, of course, but I worry about violating the CFL condition.
 Oplen = size(Oper,1); 
 % Taking the length of the operator tells the script how many columns to
 % expect (how many variables).
