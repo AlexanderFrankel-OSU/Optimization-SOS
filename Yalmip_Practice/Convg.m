@@ -1,4 +1,4 @@
-clear;clc;
+clear;clc;clf;
 yalmip clear
 
 % Define the update operator as a matrix so that abash can evaluate the
@@ -7,6 +7,9 @@ syst = [-1 1.5 0.5 0.2;
         1 -2 1 1; 
         0.5 0.5 -3 -1; 
         0.5 0.5 1 -4];
+T = 135;
+dt = 1e-5;
+
 
 % In this script the 't' stands for true, and the 'm' stands for modeled,
 % so the initial data here shows we're starting somewhere fairly different
@@ -38,12 +41,12 @@ systda = syst;%-diag(mu)
 % The operator matrix goes in the first entry, initial values in the third,
 % and number of abash itterations in the last.
 
-Mt = timevo(syst,[],x0t,[],1e+7); 
+Mt = timevo(syst,[],x0t,[],floor(T/dt),dt); 
 % I'll add shorter comments in the timevo and abash scripts.
 
 % Once the "data" is generated from the above line, the model takes in the
 % data "Mt" and uses the mu values, starting at different initial values.
-Mm = timevo(systda,Mt,x0m,mu,1e+7);
+Mm = timevo(syst,Mt,x0m,mu,floor(T/dt),dt);
 
 % After that, we take the difference between data and model and calculate 
 % the absolute difference in quadrature, and plot it using semilogy.

@@ -20,13 +20,11 @@ Q = [-(1+mu(1)) 1.25 0.5 0.35;
 % for the optimization; though it caused the solver to give slightly
 % different values for the mu(2) parameter
 
-dUdt = 0.5*x'*Q*x;
+dUdt = x'*Q*x;
 %Subtract a small fraction of the sum of squares to ensure definiteness
-negdUdtsos = -dUdt-eps*dUdt;
+negdUdtsos = -dUdt-eps*(dot(x,x));
 
 % Define other constraints, such as that
-
-mupos = [mu(1)-eps;mu(2)-eps];
 objfunc = mu(1)+mu(2);
 
 
@@ -40,7 +38,7 @@ objfunc = mu(1)+mu(2);
 % positive, and Q should be negative semi-definite (which is equivalent to
 % the expression for dUdt being negative semi-definite, which MOSEK can
 % handle).
-constr = [sos(negdUdtsos), mupos(1) >= 0, mupos(2) >= 0];
+constr = [sos(negdUdtsos), mu(1) >= 0, mu(2) >= 0];
 
 options = sdpsettings('solver', 'mosek');
 
