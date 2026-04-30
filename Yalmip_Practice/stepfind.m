@@ -10,17 +10,42 @@ mu = [.36 0 0 0];
 diagmu = diag(mu);
 x0t = [5,1,-3,3];
 x0m = [.2,.2,-.2,.1];
+Sx0 = x0m-x0t;
 Oper = syst;
 
+T=20;
+dt = 1e-5;
+N=0;
+
 [Evecs,Evals] = eig(Oper);
-SOper = Evals-diagmu;
+SOper = real(eye(4)+(Evals-diagmu)*dt);
+% Note for tomorrow: Try actually calculating the quantity you want,
+% instead of letting MATLAB do the work for you.
+%(1e-12)^2>Sx0*SOper^2*(Sx0')
+%(1e-12)^2*Sx0*Sx0'>|SOper|
+%{
+while norm(Sx0*SOper^N)>1e-16
+    N=N+1;
+end
+
+display(N*dt)
+display(norm(Sx0*SOper^N))
+%}
+
+% Predicted time to reach that value:
+% 1.786246300000000e+02
+% 9.999997117212803e-17
+
+
+
+%{
 
 y01 = x0t*(transpose(Evecs))^(-1);
 y02 = x0m*(transpose(Evecs))^(-1);
 Sy0 = y02-y01;
 
-T=100;
-dt = 1e-5;
+
+
 
 % The operator is a diagonal matrix... It does not change under transpose!
 SyEvo = timevo(SOper,[],Sy0,[],floor(T/dt),dt);
@@ -47,4 +72,4 @@ display(suffT)
 
 
 
-
+%}
