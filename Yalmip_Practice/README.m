@@ -3,7 +3,7 @@ Breakdown of the scripts in this folder:
 
 timevo() - A function that takes in a matrix for a differential operator
 and outputs the time evolution under a small timestep for a certain number
-of steps, and can accept "measured data" to accomodate data assimilation
+of steps, and can accept "measured data" to acommodate data assimilation
 (or generate the data).
 
 TestScriptforabash - Supposed to be a simple model to show that timevo
