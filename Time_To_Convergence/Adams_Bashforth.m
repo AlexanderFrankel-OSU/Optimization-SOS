@@ -1,34 +1,48 @@
-function [X] = Adams_Bashforth(M, Data, Oper, MU, row, dt)
-% Runs one Adams-Bashforth step at a specified row.
+function [M] = Adams_Bashforth(Matrix, Operator, N, dt, Data, MU)
 
-% Because of how I decided to store data in a matrix, we need to transpose
-% the operator which is written to generate data in column vector format:
-transOper = transpose(Oper);
-% My idea was to take d/dt([x1,x2,...,xn]^T)=Oper*[x1,x2,...,xn]^T 
-% and transpose the equation so that we have:
-% d/dt([x1,x2,...,xn]) = [x1,x2,...,xn]*(Oper^T), and can just multiply on
-% the left by the row vector.
+M = [Matrix(:,1:2),zeros(size(Matrix,1),size(Matrix,2)-2)];
 
-% Here, check if the Data or MU entries are excluded and run without data
-% assimilation if so.
-if or(isequal(Data,[]),isequal(MU,[]))
-    % Check if the row is 2 or less because Adams-Bashforth requires two
-    % rows before it, so if not, run one step of Euler.
-    if row <= 2
-        X = M(1,:)+M(1,:)*transOper*dt;
+if isequal(M(:,2),zeros(size(M,1),1));
+    display('Enter initial state')
+   return;
+end
+
+%If Operator is a matrix, run this:
+
+if isequal(class(Operator),'double');
+
+    if or(isequal(Data,[]),isequal(MU,[]));
+        
+        for col = 3:N+1   
+        M(:,col) = M(:,col-1)+1.5*Operator*(M(:,col-1)-0.5*M(:,col-2))*dt;
+        end
+            return;
     else
-    % Otherwise, run Adams-Bashforth
-        X = M(row-1,:)+(1.5*M(row-1,:)*transOper-0.5*M(row-2,:)*transOper)*dt;
+
+        for col = 3:N+1 
+        M(:,col) = M(:,col-1)+(Operator*(1.5*M(:,col-1)-0.5*M(:,col-2))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+        end
+        return;
     end
-return;
+
+else %If Operator is a function, run this:
+
+    if or(isequal(Data,[]),isequal(MU,[]));
+
+        for col = 3:N+1   
+        M(:,col) = M(:,col-1)+(1.5*Operator(M,col-1)-0.5*Operator(M,col-2))*dt;
+        end
+            return;
+    else
+
+        for col = 3:N+1 
+        M(:,col) = M(:,col-1)+(1.5*Operator(M,col-1)-0.5*Operator(M,col-2)-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+        end
+            return;
+    end
 end
 
-% If the Data and MU are full, then run with data assimilation:
-if row <= 2
-    X = M(1,:)+(M(1,:)*transOper-MU.*(M(1,:)-Data(1,:)))*dt;
-else
-    X = M(row-1,:)+(1.5*M(row-1,:)*transOper-0.5*M(row-2,:)*transOper-MU.*(M(row-1,:)-Data(row-1,:)))*dt;
+    
 end
 
 
-end
