@@ -1,6 +1,6 @@
-function [M] = Adams_Bashforth(Matrix, Operator, N, dt, Data, MU)
-
-M = [Matrix(:,1:2),zeros(size(Matrix,1),size(Matrix,2)-2)];
+function [M] = Adams_Bashforth(InitCons, Operator, Time, dt, Data, MU)
+N = ceil(Time/dt);
+M = [InitCons,zeros(size(Operator,1),N)];
 
 if isequal(M(:,2),zeros(size(M,1),1));
     display('Enter initial state')
@@ -22,7 +22,7 @@ if isequal(class(Operator),'double');
         for col = 3:N+1 
         M(:,col) = M(:,col-1)+(Operator*(1.5*M(:,col-1)-0.5*M(:,col-2))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
         end
-        return;
+            return;
     end
 
 else %If Operator is a function, run this:
