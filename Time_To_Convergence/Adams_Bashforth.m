@@ -14,7 +14,7 @@ if isequal(class(Operator),'double');
     if or(isequal(Data,[]),isequal(MU,[]));
         
         for col = 3:N+1   
-        M(:,col) = M(:,col-1)+1.5*Operator*(M(:,col-1)-0.5*M(:,col-2))*dt;
+        M(:,col) = M(:,col-1)+Operator*(1.5*M(:,col-1)-0.5*M(:,col-2))*dt;
         end
             return;
     else

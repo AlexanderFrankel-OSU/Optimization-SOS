@@ -22,18 +22,34 @@ if isequal(class(Operator),'double');
             return;
     end
 
-else %If Operator is a function, run this:
+elseif isequal(class(Operator),'function_handle') %If Operator is a function, run this:
 
     if or(isequal(Data,[]),isequal(MU,[]));
-
-        for col = 2:N+1   
-        M(:,col) = M(:,col-1)+(Operator(M,col))*dt;
-        end
+        if nargin(Operator)<2
+            for col = 2:N+1   
+            M(:,col) = M(:,col-1)+(Operator(M(:,col-1)))*dt;
+            end
+        elseif nargin(Operator)==2
+            for col = 2:N+1   
+            M(:,col) = M(:,col-1)+(Operator(M(:,col-1),Data(:,col-1)))*dt;
+            end
+        else 
+            display('Check the number of variables in your differential operator.')
             return;
+        end
+                return;
     else
-
-        for col = 2:N+1 
-        M(:,col) = M(:,col-1)+(Operator(M,col)-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+        if nargin(Operator)<2
+            for col = 2:N+1 
+            M(:,col) = M(:,col-1)+(Operator(M(:,col-1))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+            end
+        elseif nargin(Operator)==2
+            for col = 2:N+1 
+            M(:,col) = M(:,col-1)+(Operator(M(:,col-1),Data(:,col-1))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+            end
+        else
+            display('Check the number of variables in your differential operator.')
+            return;
         end
             return;
     end
