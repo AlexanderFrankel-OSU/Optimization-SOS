@@ -11,13 +11,13 @@ if isequal(class(Operator),'double');
     if or(isequal(Data,[]),isequal(MU,[]));
 
         for col = 2:N+1   
-        M(:,col) = M(:,col-1)+(Operator*M(:,col-1))*dt;
+            M(:,col) = M(:,col-1)+(Operator*M(:,col-1))*dt;
         end
             return;
     else
 
         for col = 2:N+1 
-        M(:,col) = M(:,col-1)+(Operator*M(:,col-1)-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+            M(:,col) = M(:,col-1)+(Operator*M(:,col-1)-MU*(M(:,col-1)-Data(:,col-1)))*dt;
         end
             return;
     end
@@ -27,28 +27,28 @@ elseif isequal(class(Operator),'function_handle') %If Operator is a function, ru
     if or(isequal(Data,[]),isequal(MU,[]));
         if nargin(Operator)<2
             for col = 2:N+1   
-            M(:,col) = M(:,col-1)+(Operator(M(:,col-1)))*dt;
+                M(:,col) = M(:,col-1)+(Operator(M(:,col-1)))*dt;
             end
         elseif nargin(Operator)==2
             for col = 2:N+1   
-            M(:,col) = M(:,col-1)+(Operator(M(:,col-1),Data(:,col-1)))*dt;
+                M(:,col) = M(:,col-1)+(Operator(M(:,col-1),Data(:,col-1)))*dt;
             end
         else 
-            display('Check the number of variables in your differential operator.')
+                display('Check the number of variables in your differential operator.')
             return;
         end
                 return;
     else
         if nargin(Operator)<2
             for col = 2:N+1 
-            M(:,col) = M(:,col-1)+(Operator(M(:,col-1))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+                M(:,col) = M(:,col-1)+(Operator(M(:,col-1))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
             end
         elseif nargin(Operator)==2
             for col = 2:N+1 
-            M(:,col) = M(:,col-1)+(Operator(M(:,col-1),Data(:,col-1))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
+                M(:,col) = M(:,col-1)+(Operator(M(:,col-1),Data(:,col-1))-MU*(M(:,col-1)-Data(:,col-1)))*dt;
             end
         else
-            display('Check the number of variables in your differential operator.')
+                display('Check the number of variables in your differential operator.')
             return;
         end
             return;

@@ -5,8 +5,8 @@ clear;clc;
 % The row will represent the timestep and the column the one value of mu.
 % If this is fast, we can run through changing the other values in MU.
 % For the most part, initial conditions will stay the same.
-E = 4;
-HH = 4;
+E = 6;
+HH = 40;
 FE_Atime = zeros(EE,HH);
 FE_Dtime = zeros(EE,HH);
 FE_Rtime = zeros(EE,HH);
@@ -20,7 +20,7 @@ x0 = [-.2;-.2;-.2;.1];
                                             %mu-independent. It is.
                                             %x0 = rand(4,1);
             sx0 = x0-x0t;
-            eps = 1e-16;
+            epsilon = 1e-16;
 
 Operator = [-1 0.5 0.5 0.2;
             1 -2 1 1; 
@@ -33,7 +33,7 @@ for i = 1:EE
             
             dt = (1e-5)*i;
             Timestep(i) = dt;
-            MU = diag([.1*j,0,0,0]);
+            MU = diag([.05*j,0,0,0]);
             MUstep(j+1) = MU(1,1);
 
 
@@ -41,7 +41,7 @@ for i = 1:EE
             
             [P_c,D_c] = eig(Operator-MU); % Calculate the eigenvalues
             sy0_FE = (P_c^-1)*sx0; % Transform the difference into eigenvector-land
-            Analytic_Time = log(eps/(norm(P_c)*norm(sy0_FE)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
+            Analytic_Time = log(epsilon/(norm(P_c)*norm(sy0_FE)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
             
             FE_Atime(i,j+1) = Analytic_Time;
             
@@ -66,7 +66,7 @@ for i = 1:EE
             Max_EigB = max(abs(D_abv)); % Take largest eigenvalue's absolute value
             z1_AB = (P_AB^-1)*[sx1;sx0]; % Create column vector by joining sx1 and sx0
             
-            AB_Discrete_Time = dt*log(eps/(norm([eye(Opsize) zeros(Opsize,Opsize)]*P_ab)*norm(z1_AB)))/log(norm(D_ab)); % Calculate discrete time to convergence for AB
+            AB_Discrete_Time = dt*log(epsilon/(norm([eye(Opsize) zeros(Opsize,Opsize)]*P_ab)*norm(z1_AB)))/log(norm(D_ab)); % Calculate discrete time to convergence for AB
             
             
             AB_Dtime(i,j+1) = AB_Discrete_Time;
@@ -91,7 +91,7 @@ for i = 1:EE
             
             
             for Num2 = 1:size(Errm2,2); % Find when MATLAB hits epsilon
-                if Errm2(Num2)<eps;
+                if Errm2(Num2)<epsilon;
                     break;
                 end
             end
@@ -101,8 +101,8 @@ for i = 1:EE
     end
 end
 %% Display
-%display(1+log(eps/norm(Lcpp))/log(Max_EigB))
-%display(1+log(eps/norm(Lc13))/log(Max_EigB))
+%display(1+log(epsilon/norm(Lcpp))/log(Max_EigB))
+%display(1+log(epsilon/norm(Lc13))/log(Max_EigB))
 %{
 AnDidiff = abs(AB_Atime-AB_Dtime);
 ABlogAnDidiff = log(AnDidiff);

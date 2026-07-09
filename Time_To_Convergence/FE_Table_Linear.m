@@ -8,8 +8,8 @@
 % asking MATLAB to compute the time.
 
 % NOTE: It took ~3.5 minutes to run ONLY the actual Forward Euler over 10
-% different timesteps and 10 different mu values. That means if you wanted
-% to plot a 100x100 graph, it would take around six hours. UHHHHH...
+% different timesteps and 10 different mu values. If you wanted
+% to plot a 100x100 graph, it would take around six hours.
 
 %% Starting the for loop
 clear;clc;
@@ -17,8 +17,8 @@ clear;clc;
 % The row will represent the timestep and the column the one value of mu.
 % If this is fast, we can run through changing the other values in MU.
 % For the most part, initial conditions will stay the same.
-EE = 10;
-HH = 10;
+EE = 5;
+HH = 100;
 FE_Atime = zeros(EE,HH);
 FE_Dtime = zeros(EE,HH);
 FE_Rtime = zeros(EE,HH);
@@ -32,41 +32,42 @@ x0 = [-.2;-.2;-.2;.1];
                                             %mu-independent. It is.
                                             %x0 = rand(4,1);
             sx0 = x0-x0t;
-            eps = 1e-16;
+            epsilon = 1e-16;
 
-Operator = [-1 0.5 0.5 0.2;
-            1 -2 1 1; 
+Operator = [2 4.25 0.5 0.2;
+            1 3 1 1; 
             0.5 0.5 -3 -1; 
             0.5 0.5 1 -4];
+
+display('Note the matrix here causes uncontrolled growth in variables.')
+display('The eigenvalues are:')
+display(eig(Operator))
+display('The minimal nudging coefficients are:')
+display([5.1419402352; 5.94628559471])
 Opsize = size(Operator,1);
 
-for i = 1:EE
-    for j = 0:(HH-1)
+%% Begin long for loop
+for II = 1:EE
+    for JJ = 0:(HH-1)
             
-            dt = (1e-5)*i;
-            Timestep(i) = dt;
-            MU = diag([.1*j,0,0,0]);
-            MUstep(j+1) = MU(1,1);
+            dt = (1e-5)*II;
+            Timestep(II) = dt;
+            MU = diag([(5.1419402352/HH)*JJ, (5.94628559471/HH)*JJ,0,0]);
+            MUstep(JJ+1) = MU(1,1);
             
             
             %% Computing the Analytic Time to Convergence
             
             [P_c,D_c] = eig(Operator-MU); % Calculate the eigenvalues
             sy0_FE = (P_c^-1)*sx0; % Transform the difference into eigenvector-land
-            Analytic_Time = log(eps/(norm(P_c)*norm(sy0_FE)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
+            Analytic_Time = log(epsilon/(norm(P_c)*norm(sy0_FE)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
             
-            FE_Atime(i,j+1) = Analytic_Time;
+            FE_Atime(II,JJ+1) = Analytic_Time;
             
             %% (Forward Euler) Computing the Discrete Time to Convergence
-            FE_Discrete_Time = dt/log(norm(eye(Opsize)+D_c*dt))*log(eps/((norm(P_c)*norm((P_c^-1)*sx0)))); % Calculate upper bound for discrete time to convergence
-            FE_Dtime(i,j+1) = FE_Discrete_Time;
+            FE_Discrete_Time = dt/log(norm(eye(Opsize)+D_c*dt))*log(epsilon/((norm(P_c)*norm((P_c^-1)*sx0)))); % Calculate upper bound for discrete time to convergence
+            FE_Dtime(II,JJ+1) = FE_Discrete_Time;
       
-
-
-
-
-
-
 
             %% (Forward Euler) Finding the Time to Convergence According to MATLAB
 
@@ -87,15 +88,15 @@ for i = 1:EE
                 Data1Norm(column) = norm(Data1(:,column));
             end
             
-            for Num1 = 1:size(Errm1,2); % Find when MATLAB hits epsilon,
-                if Errm1(Num1)<eps;
+            for Num1 = 1:size(Errm1,2); % Find when MATLAB hits epsilon
+                if Errm1(Num1)<epsilon;
                     break;
                 end
             end
             Num1 = Num1+1; % Add one because
             
 
-            FE_Rtime(i,j+1) = Num1*dt;
+            FE_Rtime(II,JJ+1) = Num1*dt;
                
     end
 end
@@ -126,8 +127,17 @@ ylabel('MU Value')
 zlabel('Real TTC')
 
 %%
+%{
 surf(Timestep,MUstep,transpose(FE_Dtime))
 xlabel('Timestep')
 ylabel('MU Value')
 zlabel('Discrete TTC')
+%}
 
+%%
+%{
+surf(Timestep,MUstep,transpose(abs(FE_Rtime-FE_Dtime)))
+xlabel('Timestep')
+ylabel('MU Value')
+zlabel('Log of difference between discrete TTC and Actual')
+%}

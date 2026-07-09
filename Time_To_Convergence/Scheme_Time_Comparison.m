@@ -9,19 +9,19 @@ clear;clc;
 x0t = [.1;.1;-.1;.1];
 x0 = [.2;.2;-.2;.1];
 sx0 = x0-x0t;
-eps = 1e-16;
+epsilon = 1e-16;
 dt = 1e-5;
 
-Operator = [-1 0.5 0.5 0.2;
+Operator = [-1 4.25 0.5 0.2;
             1 -2 1 1; 
             0.5 0.5 -3 -1; 
             0.5 0.5 1 -4];
-MU = diag([5,0,0,0]);
+MU = diag([5,5,0,0]);
 Opsize = size(Operator,1);
 %% Computing the Analytic Time to Convergence
 
 [P_c,D_c] = eig(Operator-MU); % Calculate the eigenvalues and eigenvectors
-Analytic_Time = log(eps/(norm(P_c)*norm((P_c^-1)*sx0)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
+Analytic_Time = log(epsilon/(norm(P_c)*norm((P_c^-1)*sx0)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
 % Note, the two extra diag()'s in the log is because MATLAB calculates exp()
 % element-wise, which creates ones when you take exp(Diagonal_Matrix),
 % which interferes with the operator norm.
@@ -31,7 +31,7 @@ display(Analytic_Time)
 
 %% (Forward Euler) Computing the Discrete Time to Convergence
 
-FE_Discrete_Time = dt/log(norm(eye(Opsize)+D_c*dt))*log(eps/((norm(P_c)*norm((P_c^-1)*sx0)))); % Calculate upper bound for discrete time to convergence
+FE_Discrete_Time = dt/log(norm(eye(Opsize)+D_c*dt))*log(epsilon/((norm(P_c)*norm((P_c^-1)*sx0)))); % Calculate upper bound for discrete time to convergence
 
 
 display('Forward Euler Discrete Time to Convergence:')
@@ -42,7 +42,7 @@ display(FE_Discrete_Time)
 %% (Forward Euler) Finding the Time to Convergence According to MATLAB
 
 %Analyzing the time directly:
-FE_Max_Time = max([Analytic_Time,FE_Discrete_Time,300]);
+FE_Max_Time = 10*max([Analytic_Time,FE_Discrete_Time]);
 
 Data1 = x0t; % Set up initial conditions for numerical scheme
 Pred1 = x0;
@@ -59,7 +59,7 @@ for column = 1:size(Errm1,2) % Calculate norms for each step
 end
 
 for Num1 = 1:size(Errm1,2); % Find when MATLAB hits epsilon,
-    if Errm1(Num1)<eps;
+    if Errm1(Num1)<epsilon;
         break;
     end
 end
@@ -89,8 +89,7 @@ P_abin = P_ab^(-1);
 D_abv = diag(D_ab); % Put eigenvalues in matrix
 Max_EigB = max(abs(D_abv)); % Take largest eigenvalue's absolute value
 z1_AB = (P_ab^-1)*[sx1;sx0]; % Create column vector by joining sx1 and sx0
-% A dubious approximation for the AB time to convergence is log((sqrt(2)*eps)/norm(z1_AB))*dt/log(Max_EigB)
-AB_Discrete_Time = dt*log(eps/(norm([eye(Opsize) zeros(Opsize,Opsize)]*P_ab)*norm(z1_AB)))/log(norm(D_ab)); % Calculate discrete time to convergence for AB
+AB_Discrete_Time = dt*log(epsilon/(norm([eye(Opsize) zeros(Opsize,Opsize)]*P_ab)*norm(z1_AB)))/log(norm(D_ab)); % Calculate discrete time to convergence for AB
 
 display('Discrete TTC for Adams-Bashforth:')
 display(AB_Discrete_Time)
@@ -139,7 +138,7 @@ end
 
 
 for Num2 = 1:size(Errm2,2); % Find when MATLAB hits epsilon
-    if Errm2(Num2)<eps;
+    if Errm2(Num2)<epsilon;
         break;
     end
 end
@@ -147,6 +146,6 @@ Num2 = Num2+1; % You get it, right?
 
 display('MATLAB says TTC for Adams-Bashforth is:')
 display(Num2*dt)
-
-semilogy((0:(size(Data2Norm,2)-1))*dt,Errm2)
+semilogy((0:(size(Data1Norm,2)-1))*dt,Errm1)
+% semilogy((0:(size(Data2Norm,2)-1))*dt,Errm2)
 % Maybe put a pretty table down here? Would be nice!

@@ -11,10 +11,12 @@ eps = 1e-9;
 
 % Define Q as a symmetric matrix (by turning a triangular sum of quadratic
 % terms into the form z'*Q*z from the system).
-Q = [-(1+mu(1)) 1.25 0.5 0.35; 
-    1.25 -(2+mu(2)) 0.75 0.75;
-    0.5 0.75 -3 0;
-    0.35 0.75 0 -4];
+KUE = [2 4.25 0.5 0.2;
+            1 3 1 1; 
+            0.5 0.5 -3 -1; 
+            0.5 0.5 1 -4];
+Q = (KUE+KUE')/2-diag([mu(1),mu(2),0,0]);
+
 
 % Define the energy term (as far as I know, the 0.5 term isn't significant
 % for the optimization; though it caused the solver to give slightly
@@ -25,20 +27,13 @@ dUdt = x'*Q*x;
 negdUdtsos = -dUdt-eps*(dot(x,x));
 
 % Define other constraints, such as that
-objfunc = mu(1)+mu(2);
-
-
-% Here I'll write the constraints and optimization attempt that I first
-% hoped would work.
-% negQconstr = -Q-eps*Q;
-% constr = [negQconstr >= 0, mupos(1)>=0,mupos(2)>=0];
-% optimize(constr,objfunc,options,optvar)
+objfunc = dot(mu,mu);
 
 % Define the constraints on the optimization. The mu_s need to be strictly
 % positive, and Q should be negative semi-definite (which is equivalent to
 % the expression for dUdt being negative semi-definite, which MOSEK can
 % handle).
-constr = [sos(negdUdtsos), mu(1) >= 0, mu(2) >= 0];
+constr = [sos(negdUdtsos), mu(:) >= 0];
 
 options = sdpsettings('solver', 'mosek');
 
