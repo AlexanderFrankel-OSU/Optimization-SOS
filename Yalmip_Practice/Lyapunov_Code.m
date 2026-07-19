@@ -16,7 +16,7 @@ optvar = Coeffs;
 V = sum(Coeffs.*Terms);
 
 % Create a small epsilon to turn semidefinite constraints in to definite
-eps = 0.00001;
+epsilon = 0.00001;
 sig = 10; r = 0.5; b = 8/3;
 
 % Define the derivatives with respect to time, given by the Lorenz system
@@ -29,11 +29,11 @@ dVdt = sum(jacobian(V,x(1))*dxdt+jacobian(V,x(2))*dydt+jacobian(V,x(3))*dzdt);
 
 % Define specific constrants
 % Constraint 1: the coefficients of V should make it sum of squares
-Vsos = sum(Coeffs.*Terms)-eps*(x(1)^2+x(2)^2+x(3)^2);
+Vsos = sum(Coeffs.*Terms)-epsilon*(x(1)^2+x(2)^2+x(3)^2);
 % Constraint 2: If we want the derivative of V to be strictly negative, 
 % we hold that the negative of it should be a sum of squares, i.e., 
 % positive definite.
-negdVdt_sos = -dVdt-eps*(x(1)^2+x(2)^2+x(3)^2); 
+negdVdt_sos = -dVdt-epsilon*(x(1)^2+x(2)^2+x(3)^2); 
 
 F_cnstr = [sos(Vsos),  sos(negdVdt_sos)];
 

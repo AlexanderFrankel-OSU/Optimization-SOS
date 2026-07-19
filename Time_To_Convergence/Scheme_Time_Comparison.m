@@ -12,16 +12,18 @@ sx0 = x0-x0t;
 epsilon = 1e-16;
 dt = 1e-5;
 
-Operator = [-1 4.25 0.5 0.2;
-            1 -2 1 1; 
-            0.5 0.5 -3 -1; 
-            0.5 0.5 1 -4];
-MU = diag([5,5,0,0]);
+mumin = [0.65,0,0,0]; %0.823543613122324
+
+Operator = [-1 2 0.5 0.2;
+             1 -2 1 1;
+             0.5 0.5 -3 -1;
+             0.5 0.5 1 -4];
+MU = diag(mumin);
 Opsize = size(Operator,1);
 %% Computing the Analytic Time to Convergence
 
 [P_c,D_c] = eig(Operator-MU); % Calculate the eigenvalues and eigenvectors
-Analytic_Time = log(epsilon/(norm(P_c)*norm((P_c^-1)*sx0)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
+Analytic_Time = log(2*epsilon/(norm(P_c)*norm((P_c^-1)*sx0)))/log(norm(diag(exp(diag(D_c))))); % Calculate upper bound for analytic time to convergence
 % Note, the two extra diag()'s in the log is because MATLAB calculates exp()
 % element-wise, which creates ones when you take exp(Diagonal_Matrix),
 % which interferes with the operator norm.
@@ -31,7 +33,7 @@ display(Analytic_Time)
 
 %% (Forward Euler) Computing the Discrete Time to Convergence
 
-FE_Discrete_Time = dt/log(norm(eye(Opsize)+D_c*dt))*log(epsilon/((norm(P_c)*norm((P_c^-1)*sx0)))); % Calculate upper bound for discrete time to convergence
+FE_Discrete_Time = dt/log(norm(eye(Opsize)+D_c*dt))*log(2*epsilon/((norm(P_c)*norm((P_c^-1)*sx0)))); % Calculate upper bound for discrete time to convergence
 
 
 display('Forward Euler Discrete Time to Convergence:')
@@ -42,35 +44,30 @@ display(FE_Discrete_Time)
 %% (Forward Euler) Finding the Time to Convergence According to MATLAB
 
 %Analyzing the time directly:
-FE_Max_Time = 10*max([Analytic_Time,FE_Discrete_Time]);
-
+FE_Max_Time = max([Analytic_Time,FE_Discrete_Time]);
+ 
 Data1 = x0t; % Set up initial conditions for numerical scheme
 Pred1 = x0;
 
-Data1 = Forward_Euler(Data1,Operator,FE_Max_Time,dt,[],[]); % Run scheme w/o DA
-Pred1 = Forward_Euler(Pred1,Operator,FE_Max_Time,dt,Data1,MU); % Run DA using generated data
+Data1 = FrdEulCntrlTD(Data1,Operator,FE_Max_Time/2,dt); % Run scheme w/o DA
+Pred1 = FrdEulCntrlTD(Pred1,Operator,FE_Max_Time/2,dt,Data1,MU); % Run DA using generated data
 
-Errm1 = zeros(1,size(Data1,2)); % Matrices to hold the difference and data norms 
-Data1Norm = zeros(1,size(Data1,2));
-
-for column = 1:size(Errm1,2) % Calculate norms for each step
-    Errm1(column) = norm(Data1(:,column)-Pred1(:,column));
-    Data1Norm(column) = norm(Data1(:,column));
-end
-
-for Num1 = 1:size(Errm1,2); % Find when MATLAB hits epsilon,
-    if Errm1(Num1)<epsilon;
-        break;
+Errm1 = Data1-Pred1;
+%%
+TTC = zeros(Opsize,1);
+    for row = 1:Opsize % Calculate norms for each step
+        TTC(row) = (find(Errm1(row,:),1,"last")+1)*dt;
     end
-end
-Num1 = Num1+1; % Add one because
+TTC_max = max(TTC);
 
 display('MATLAB says TTC for Forward Euler is:')
-display(Num1*dt) % Just translating steps to real 'time'
+display(TTC_max) % Just translating steps to real 'time'
+timeline = (0:size(Errm1,2)-1)*dt;
+semilogy(timeline,abs(Errm1))
 
 
 %% (Adams-Bashforth) Computing the Discrete Time to Convergence
-
+%{
 x1t = x0t + Operator*x0t*dt;
 x1 = x0 + Operator*x0*dt; % Define the second steps using FE
 % Remember sx0;
@@ -149,3 +146,14 @@ display(Num2*dt)
 semilogy((0:(size(Data1Norm,2)-1))*dt,Errm1)
 % semilogy((0:(size(Data2Norm,2)-1))*dt,Errm2)
 % Maybe put a pretty table down here? Would be nice!
+%}
+
+%% Example of how you could use Newton's Algorithm to calculate the analytic time to convergence
+% NewtonExp = @(t) (real(P_c*expm(times(D_c,t))*P_c^(-1)*sx0)); % Note that
+% this gives a similar time to the method we implemented.
+% derNewtonExp = @(t) (real(P_c*D_c*expm(times(D_c,t))*P_c^(-1)*sx0));
+% T = 1;
+% while ~all(abs(NewtonExp(T))<epsilon);
+% T = max(T-NewtonExp(T)./derNewtonExp(T));
+% end
+

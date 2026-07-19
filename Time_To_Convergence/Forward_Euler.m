@@ -1,5 +1,9 @@
 function [M] = Forward_Euler(InitCons, Operator, Time, dt, Data, MU)
 N = ceil(Time/dt);
+if size(InitCons,1)*N*8 > 1.41e+10
+    M = NaN;
+    return;
+end
 M = [InitCons(:,1),zeros(size(InitCons,1),N)];
 if isequal(M(:,1),zeros(size(M,1),1));
     display('Enter initial state')
@@ -49,7 +53,6 @@ elseif isequal(class(Operator),'function_handle') %If Operator is a function, ru
             end
         else
                 display('Check the number of variables in your differential operator.')
-            return;
         end
             return;
     end
