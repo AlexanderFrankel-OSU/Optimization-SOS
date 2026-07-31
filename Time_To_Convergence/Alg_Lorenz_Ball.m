@@ -14,7 +14,7 @@ rho = 28;
 whichcase = [[1;1;1],[1;1;0],[1;0;1],[0;1;1],[1;0;0],[0;1;0]];
 MuVals = zeros(3,size(whichcase,2));
 % Here's all the YALMIP stuff
-for II = 1:size(whichcase,2)
+for II = 5
     yalmip clear;
 
     % Define the decision variables
@@ -34,9 +34,9 @@ for II = 1:size(whichcase,2)
     obj_func = dot(mu,mu);
     
     % Introduce the constraints
-    constr = [sos(neg_dUdt_sos), mu(:) >= 0, Xtrue(1)^2 <= 2.3365^2, Xtrue(2)^2 <= 3.263^2, Xtrue(3) >= 0, Xtrue(3) <= 1.7192];
+    constr = [sos(neg_dUdt_sos), mu(:) >= 0, Xtrue(1)^2 <= 2.3365^2, Xtrue(2)^2 <= 3.263^2, Xtrue(3) >= 0, Xtrue(3) <= 1.7192^2];
     
-    options = sdpsettings('solver', 'mosek','verbose',0);
+    options = sdpsettings('solver', 'mosek');%,'verbose',0);
     
     [sol,v,M,res] = solvesos(constr,obj_func,options,optvar);
 

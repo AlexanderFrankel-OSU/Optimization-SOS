@@ -18,10 +18,10 @@ if size(InitCons,1)*N*8 > 1.41e+10
     return;
 end
 
-if isequal(InitCons,zeros(size(InitCons,1),1));
-    display('Enter initial state')
-   return;
-end
+% if isequal(InitCons,zeros(size(InitCons,1),1));
+%     display('Enter initial state')
+%    return;
+% end
 
 M = [InitCons(:,1),zeros(size(InitCons,1),N)];
 

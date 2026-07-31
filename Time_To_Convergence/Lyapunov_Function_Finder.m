@@ -3,51 +3,50 @@
 
 % Currently does not work.
 clear; clc; yalmip clear;
-grav = 9.81;strl = 2;rtorq = 250;dco = 1.2;mass = 1.5; % Constants
 
-MOmin = mass*strl*(1+grav/strl)^2/(4*dco); % Analytically calculated from algorithm
-mu = 20; % Just for this pendulum, we'll change this
-MU = diag([mu 0 0 0]);
-muvec = diag(MU); % Useful for defining the difference derivatives dsXdt.
-
+%% Constants
+sig = 10; beta = 8/3; rho = 28;
 epsln = 1e-8;
-LinOp = [-1 2 0.5 0.2;
-             1 -2 1 1;
-             0.5 0.5 -3 -1;
-             0.5 0.5 1 -4];
-Oper = @(x) (LinOp*x)
-%[x(2)-mu*x(1);-grav/strl*sin(x(1))-dco/(mass*strl)*x(2)+rtorq/(mass*strl^2)];
+mu = sdpvar(3,1); %[330;0;0];
+MU = diag(mu);
 
-numvars = 4;
+Oper = @(s) [-sig*(s(1)-s(2)); rho*s(1)-s(2)-s(1)*s(3); s(1)*s(2)-beta*s(3)];
+numvars = 3;
 
-Xtru = sdpvar(numvars,1); % The true system
+%% Construct Lyapunov Function Form
+Xtru = sdpvar(numvars,1); % The reference system's variables (may be bounded in some way)
 X = sdpvar(numvars,1); % A model of the system
-sX = sdpvar(numvars,1); % Difference variables
-dXtrudt = Oper(Xtru);
-dXdt = Oper(X)-MU*(sX);
-%dsXdt = dXdt-dXtrudt; % Difference operator with DA (if any)
+dX = sdpvar(numvars,1); % Difference variables
 
-dsXdt = Oper(sX)-MU*sX;
 
-Monoms = monolist(sX,2,2); % Monomial of difference variables
-Cffs = sdpvar(size(Monoms,1),1);
+ddXdt = Oper(Xtru+dX)-Oper(Xtru)-MU*dX;
 
-optvar = Cffs;
+% Monoms = monolist(dX,2,2); % Monomial of difference variables
+% Cffs = sdpvar(length(Monoms),1); % Coefficients
 
-EnerV = dot(Monoms,Cffs);
-Vsos = sos(EnerV-epsln*dot(sX,sX));
-dVdt = dot(jacobian(EnerV,sX),dXdt);
-negdVdtsos = sos(-dVdt-epsln*dot(sX,sX));
+% EnerV = dot(Monoms,Cffs); % Lyapunov function
 
-constr = [Vsos, negdVdtsos]; 
+
+[EnerV,Cffs,Monoms] = polynomial(dX,2,2);
+ dVdt = dot(jacobian(EnerV,dX),ddXdt); % Time derivative of Lyapunov function
+%% Constraints and Solve
+
+optvar = Cffs; % Let solver tweak the coefficients
+
+EnerVsos = sos(EnerV-epsln*dot(dX,dX));
+negdVdtsos = sos(-dVdt-epsln*dot(dX,dX));
+
+constr = [EnerVsos, negdVdtsos, Xtru(1)^2 <= 2.3365^2, Xtru(2)^2 <= 3.263^2, Xtru(3) >= 0, Xtru(3) <= 1.7192]; 
 options = sdpsettings('solver', 'mosek');
 [sol,v,Q,res] = solvesos(constr, [], options, optvar);
 
-sdisplay([value(Cffs),Monoms])
-sdisplay(dot(value(Cffs),Monoms))
+DCMP = sosd(EnerVsos);
+DCMPcln = clean(DCMP,1e-6);
 
-%sdisplay(dot(jacobian(EnerV,X),dXdt)+dot(jacobian(EnerV,Xtru),dXtrudt))
 
+sosd(EnerVsos) % Display function and derivative in SOS decomposition
+sdisplay(sosd(negdVdtsos))
+% sdisplay(value(P))
 
 
 

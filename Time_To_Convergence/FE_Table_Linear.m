@@ -13,7 +13,7 @@ clear;clc;
 
 
 x0t = [.1;.1;-.1;.1];
-x0 = [-.2;-.2;-.2;.1];
+x0 = zeros(4,1); %[-.2;-.2;-.2;.1]; Previously used.
 
 sx0 = x0-x0t;
 dt = 1e-5;
@@ -65,31 +65,13 @@ display(FE_Discrete_Time)
 %% Run one round of Forward Euler
 FE_Max_Time = max([Analytic_Time,FE_Discrete_Time]); % Arbitrarily runs for twice the predicted bound, just to catch any edge cases
 
-Data1 = Forward_Euler(x0t,Operator,FE_Max_Time,dt,[],[]); % Run scheme w/o DA
-Pred1 = Forward_Euler(x0,Operator,FE_Max_Time,dt,Data1,MU); % Run DA using generated data
+Data1 = FrdEulCntrlTD(x0t,Operator,FE_Max_Time,dt); % Run scheme w/o DA
+Pred1 = FrdEulCntrlTD(x0,Operator,FE_Max_Time,dt,Data1,MU); % Run DA using generated data
 
 %% Better TTC Catcher
 
 lindiff = Pred1-Data1;
-TTC = zeros(Opsize,1);
-if anynan(lindiff(:,end))
-     notNAN = zeros(Opsize,1);
-     startNAN = size(lindiff,2);
-     for row = 1:Opsize
-        notNAN(row,1) = find(~isnan(lindiff(row,1:startNAN)),1,"last");
-        startNAN = notNAN(row,1);
-     end
-     notNANmin = min(notNAN);
-     for row = 1:Opsize
-        TTC(row,1) = (find(lindiff(row,1:notNANmin),1,"last")+1)*dt;
-     end
-     TTC_max = max(TTC);
-else
-     for row = 1:Opsize
-         TTC(row,1) = (find(lindiff(row,:),1,"last")+1)*dt;
-     end
-     TTC_max = max(TTC);
-end
+TTC = TTCfinder(lindiff,dt);
 
 timeline = (0:size(lindiff,2)-1)*dt;
 %}
@@ -100,27 +82,25 @@ timeline = (0:size(lindiff,2)-1)*dt;
 % The row will represent the timestep and the column the one value of mu.
 % If this is fast, we can run through changing the other values in MU.
 % For the most part, initial conditions will stay the same.
+NumTS = 9;
+stepend = 1e-1;
+rcoff = (stepend/1e-5)^(1/(NumTS-1));
+Timestep = (1e-5)*rcoff.^(0:NumTS-1); % This defines the spread of the timesteps -- Geometrically from 1e-5 to 1e-1.
 
-rcoff = (1e+5)^(1/10);
-Timestep = (1e-5)*rcoff.^(0:10);
-EE = size(Timestep,2);
+EE = size(Timestep,1);
 HH = 50;
 barr = 0.02;
 % MUstep = trumin+(barr:(mumin-trumin-barr)/(HH-1):mumin-trumin); % Only to plot between the true minimum and the MOSEK minimum.
 mumax = 10; % Otherwise run this for the larger, less-interesting plot.
 MUstep = mumin+(0:mumax/(HH-1):mumax);
 
-FE_Atime = zeros(EE,HH);
-FE_Dtime = zeros(EE,HH);
-FE_Rtime = zeros(EE,HH);
-TimetoRunFE = zeros(EE,HH);
-
+[FE_Atime FE_Dtime FE_Rtime TimetoRunFE Convgs] = deal(zeros(EE,HH));
 
 
 for II = 1:EE
     for JJ = 1:HH % Start at zero so that we see no convergence occurs if mu is zero
             
-            dt = Timestep(1,II);
+            dt = Timestep(II);
             MU = diag([MUstep(1,JJ),0,0,0]);
             
             
@@ -147,88 +127,34 @@ for II = 1:EE
             %% (Forward Euler) Finding the Time to Convergence According to MATLAB
             
             %Analyzing the time directly:
-            FE_Max_Time = max([Analytic_Time,FE_Discrete_Time]);
-            
-            Data1 = x0t; % Set up initial conditions for numerical scheme
-            Pred1 = x0;
+            FE_Max_Time = max([Analytic_Time,FE_Discrete_Time,200]); % The 200 is arbitrary; it's just to make sure nothing is missed.
 
-            tic;
-            Data1 = Forward_Euler(Data1,Operator,FE_Max_Time,dt,[],[]); % Run scheme w/o DA
-            Pred1 = Forward_Euler(Pred1,Operator,FE_Max_Time,dt,Data1,MU); % Run DA using generated data
+            tic; % Just for curiousity, record the time. It should be directly proportional to the time input.
+            Data1 = FrdEulCntrlTD(x0t,Operator,FE_Max_Time,dt); % Run scheme w/o DA
+            Pred1 = FrdEulCntrlTD(x0,Operator,FE_Max_Time,dt,Data1,MU); % Run DA using generated data
             TimetoRunFE(II,JJ) = toc;
 
             lindiff = Pred1-Data1;
-            TTC = zeros(Opsize,1);
-            if anynan(lindiff(:,end))
-                 notNAN = zeros(Opsize,1);
-                 startNAN = size(lindiff,2);
-                 for row = 1:Opsize
-                    notNAN(row,1) = find(~isnan(lindiff(row,1:startNAN)),1,"last");
-                    startNAN = notNAN(row,1);
-                 end
-                 notNANmin = min(notNAN);
-                 for row = 1:Opsize
-                    TTC(row,1) = (find(lindiff(row,1:notNANmin),1,"last")+1)*dt;
-                 end
+            FE_Rtime(II,JJ) =  max(TTCfinder(lindiff,dt));
+            
+            if FE_Rtime(II,JJ) < FE_Max_Time
+                Convgs = 1;
+                FE_Rtime(II,JJ) = max(TTC);
             else
-                for row = 1:Opsize
-                    TTC(row,1) = (find(lindiff(row,:),1,"last")+1)*dt;
-                end
+                FE_Rtime(II,JJ) = NaN;
             end
-
-            FE_Rtime(II,JJ) = max(TTC);  
             
     end
 end
 
-%{
-AnDidiff = abs(FE_Atime-FE_Dtime);
-logAnDidiff = log(AnDidiff);
-
-surf(Timestep,MUstep,transpose(FE_Dtime))
-xlabel('Timestep')
-ylabel('MU Value')
-zlabel('Discrete TTC')
-
-surf(Timestep,MUstep,transpose(FE_Atime))
-xlabel('Timestep')
-ylabel('MU Value')
-zlabel('Analytic TTC')
-
-surf(Timestep,MUstep,transpose(logAnDidiff))
-xlabel('Timestep')
-ylabel('MU value')
-zlabel('Log of difference in TTC')
-%}
 %%
-surf(Timestep,MUstep,transpose(FE_Rtime))
-xlabel('Timestep')
-ylabel('MU Value')
-zlabel('Real TTC')
+clf;
+surf(MUstep,Timestep,FE_Rtime)
+ylabel('Step Size')
+xlabel('Nudging Coefficient')
+zlabel('Numerical TTC')
+set(gca,'YScale','log')
 
-%%
-
-% surf(Timestep,MUstep,transpose(FE_Dtime))
-% xlabel('Timestep')
-% ylabel('MU Value')
-% zlabel('Discrete TTC')
-
-
-%%
-%{
-surf(Timestep,MUstep,transpose(abs(FE_Rtime-FE_Dtime)))
-xlabel('Timestep')
-ylabel('MU Value')
-zlabel('Log of difference between discrete TTC and Actual')
-%}
-
-%%
-%{
-surf(Timestep,MUstep,transpose(FE_Atime./FE_Rtime))
-xlabel('Timestep')
-ylabel('MU Value')
-zlabel('Ratio of analytic time to convergence to numerical')
-%}
 
 %% Code to Produce the Minimal Nudging Coefficients (Only Run if Changed)
 %{
